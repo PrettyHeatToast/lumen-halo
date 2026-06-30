@@ -139,7 +139,7 @@
     }
   }
 
-  // be-one: "bring one" — koppel iemand in en word lid
+  // be-one: word zelf lid — niemand hoeft nog iemand mee te brengen
   function setCounter(el, n) {
     el.setAttribute('data-count', n);
     el.textContent = n.toLocaleString('nl-BE');
@@ -148,8 +148,8 @@
   async function handleBeOne(e) {
     e.preventDefault();
     var name = document.getElementById('bo-name').value.trim();
-    var bring = document.getElementById('bo-bring').value.trim();
-    if (!name || !bring) return;
+    var email = document.getElementById('bo-email').value.trim();
+    if (!name || !email.includes('@')) return;
 
     var btn = e.target.querySelector('button');
     btn.disabled = true;
@@ -158,7 +158,7 @@
       await fetch(LAUNCH_WEBHOOK_URL, {
         method: 'POST',
         mode: 'no-cors',
-        body: new URLSearchParams({ naam: name, meegebracht: bring, bron: 'be-one' })
+        body: new URLSearchParams({ naam: name, email: email, bron: 'be-one' })
       });
     } catch (err) {
       // opaque/no-cors: we koppelen toch in zolang het verzoek verstuurd kon worden
@@ -166,7 +166,7 @@
 
     var counter = document.getElementById('be-one-counter');
     if (counter) {
-      var cur = (parseInt(counter.getAttribute('data-count'), 10) || 0) + 2;
+      var cur = (parseInt(counter.getAttribute('data-count'), 10) || 0) + 1;
       setCounter(counter, cur);
     }
     document.getElementById('be-one-form-wrap').style.display = 'none';
