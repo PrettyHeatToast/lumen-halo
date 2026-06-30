@@ -1,3 +1,7 @@
+  // ⟁
+  console.log('%c⟁', 'color:#C2853C;font-size:22px;');
+  console.log('%czet dat ding niet op. "samen" is hoe ze je krijgen.\nwe waren met vier. vraag naar de vierde. — HV', 'color:#9A917F;font-style:italic;font-size:13px;');
+
   var footerYear = document.getElementById('footer-year');
   if (footerYear) footerYear.textContent = new Date().getFullYear();
 
@@ -21,8 +25,33 @@
     document.getElementById('launch-banner').classList.add('hidden');
   }
 
+  // Lege/geschrapte profielen: 404-kaart (team) en eindeloos ladende leegte (stille vennoot)
+  function openVoid(kind) {
+    var overlay = document.getElementById('void-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'void-overlay';
+      overlay.className = 'void-overlay';
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeVoid();
+      });
+      document.body.appendChild(overlay);
+    }
+    if (kind === 'partner') {
+      overlay.innerHTML = '<div class="void-inner"><div class="void-glyph">⟁</div><div class="void-spinner"></div></div>';
+    } else {
+      overlay.innerHTML = '<div class="void-inner"><div class="void-404">404</div><p class="void-msg">dit profiel bestaat niet (meer)</p></div>';
+    }
+    overlay.classList.add('open');
+  }
+
+  function closeVoid() {
+    var overlay = document.getElementById('void-overlay');
+    if (overlay) overlay.classList.remove('open');
+  }
+
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeLaunchToast();
+    if (e.key === 'Escape') { closeLaunchToast(); closeVoid(); }
   });
 
   async function handleReserve(e) {
@@ -108,4 +137,47 @@
       btn.disabled = false;
       error.style.display = 'block';
     }
+  }
+
+  // be-one: "bring one" — koppel iemand in en word lid
+  function setCounter(el, n) {
+    el.setAttribute('data-count', n);
+    el.textContent = n.toLocaleString('nl-BE');
+  }
+
+  async function handleBeOne(e) {
+    e.preventDefault();
+    var name = document.getElementById('bo-name').value.trim();
+    var bring = document.getElementById('bo-bring').value.trim();
+    if (!name || !bring) return;
+
+    var btn = e.target.querySelector('button');
+    btn.disabled = true;
+
+    try {
+      await fetch(LAUNCH_WEBHOOK_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: new URLSearchParams({ naam: name, meegebracht: bring, bron: 'be-one' })
+      });
+    } catch (err) {
+      // opaque/no-cors: we koppelen toch in zolang het verzoek verstuurd kon worden
+    }
+
+    var counter = document.getElementById('be-one-counter');
+    if (counter) {
+      var cur = (parseInt(counter.getAttribute('data-count'), 10) || 0) + 2;
+      setCounter(counter, cur);
+    }
+    document.getElementById('be-one-form-wrap').style.display = 'none';
+    document.getElementById('be-one-confirmed').style.display = 'block';
+  }
+
+  // De teller loopt vanzelf op — er worden er steeds meer één.
+  var beOneCounter = document.getElementById('be-one-counter');
+  if (beOneCounter) {
+    setInterval(function () {
+      var cur = (parseInt(beOneCounter.getAttribute('data-count'), 10) || 0) + 1;
+      setCounter(beOneCounter, cur);
+    }, 13000);
   }
